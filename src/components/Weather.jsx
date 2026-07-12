@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";//import useState and useEffect from react
+import { useEffect, useRef, useState } from "react";//import useState and useEffect from react
 import {
     Cloud,
     CloudRain,
@@ -18,6 +18,7 @@ function Weather() {
     const [citySuggestions, setCitySuggestions] = useState([]);//state to store city suggestions
     const [loading, setLoading] = useState(false);//state to store loading status
     const [error, setError] = useState("");//state to store error message
+    const searchRef = useRef(null);//search ref to detect click outside of the search bar
 
     //function to fetch weather data by coordinates
     const fetchWeatherByCoords = async (lat, lon) => {
@@ -143,7 +144,7 @@ function Weather() {
     }, []);
 
     useEffect(() => {
-        if (searchInput.trim().length < 0) {
+        if (searchInput.trim().length < 1) {//if search input is empty, clear city suggestions
             setCitySuggestions([]);
             return;
         }
@@ -164,6 +165,23 @@ function Weather() {
         return () => clearTimeout(timer);
     }, [searchInput]);
 
+    useEffect(() => { //useEffect to handle click outside of the search bar to close suggestions
+        function handleClickOutside(event) {
+            if (
+                searchRef.current &&
+                !searchRef.current.contains(event.target)
+            ) {
+                setCitySuggestions([]);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-300 to-indigo-500 p-4">
             <div className="max-w-4xl mx-auto">
@@ -176,7 +194,7 @@ function Weather() {
                 {/* Search Bar */}
                 <div className="relative z-50 bg-white bg-opacity-20 backdrop-blur-md rounded-2xl p-4 mb-6 shadow-xl">
                     <div className="flex gap-2">
-                        <div className="flex-1 relative z-50">
+                        <div className="flex-1 relative" ref={searchRef}>
                             <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400 opacity-70" />
                             <input
                                 type="text"
@@ -313,25 +331,25 @@ function Weather() {
                         {/* Forecast */}
                         {forecast && (
                             <div className="bg-white bg-opacity-20 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white border-opacity-30">
-                                <h3 className="text-2xl font-bold text-slate-700 mb-4">7-Day Forecast</h3>
+                                <h3 className="text-2xl font-bold text-slate-700 mb-3">7-Day Forecast</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
                                     {forecast.times.slice(0, 7).map((date, index) => (
                                         <div
                                             key={index}
                                             className="bg-white bg-opacity-10 rounded-xl p-4 text-center backdrop-blur-sm hover:bg-opacity-20 transition"
                                         >
-                                            <p className="text-gray-600 font-semibold mb-2">
+                                            <p className="text-gray-600 font-semibold mb-1">
                                                 {new Date(date).toLocaleDateString("en-US", {
                                                     weekday: "short",
                                                 })}
                                             </p>
-                                            <p className="text-xs text-blue-400 mb-3">
+                                            <p className="text-xs text-blue-400 mb-1">
                                                 {new Date(date).toLocaleDateString("en-US", {
                                                     month: "short",
                                                     day: "numeric",
                                                 })}
                                             </p>
-                                            <div className="flex justify-center mb-3">
+                                            <div className="flex justify-center mb-2">
                                                 {getWeatherIcon(forecast.weatherCodes[index])}
                                             </div>
                                             <p className="text-gray-600 font-bold mb-1">
