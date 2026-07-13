@@ -20,6 +20,11 @@ function Weather() {
     const [error, setError] = useState("");//state to store error message
     const searchRef = useRef(null);//search ref to detect click outside of the search bar
 
+    const parseLocalDate = (dateStr) => {//function to parse date string in YYYY-MM-DD format to a Date object in local time
+        const [year, month, day] = dateStr.split("-").map(Number);
+        return new Date(year, month - 1, day); // constructs in local time, no UTC shift
+    };
+
     //function to fetch weather data by coordinates
     const fetchWeatherByCoords = async (lat, lon) => {
         try {
@@ -254,11 +259,12 @@ function Weather() {
                                 <div>
                                     <h2 className="text-3xl font-bold text-slate-700 mb-1">{location}</h2>
                                     <p className="text-blue-400">
-                                        {new Date().toLocaleDateString("en-US", {
-                                            weekday: "long",
-                                            month: "short",
-                                            day: "numeric",
-                                        })}
+                                        {weatherData.current?.time &&
+                                            new Date(weatherData.current.time).toLocaleDateString("en-US", {
+                                                weekday: "long",
+                                                month: "short",
+                                                day: "numeric",
+                                            })}
                                     </p>
                                 </div>
                                 <div className="text-right">
@@ -331,13 +337,16 @@ function Weather() {
                                 <h3 className="text-2xl font-bold text-slate-700 mb-3">7-Day Forecast</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
                                     {forecast.times.slice(0, 7).map((date, index) => (
-                                        <div
-                                            key={index}
-                                            className="bg-white bg-opacity-10 rounded-xl p-2 text-center backdrop-blur-sm hover:bg-opacity-20 transition"
-                                        >
+                                        <div key={index} className="...">
                                             <p className="text-gray-600 font-semibold mb-1">
-                                                {new Date(date).toLocaleDateString("en-US", {
+                                                {parseLocalDate(date).toLocaleDateString("en-US", {
                                                     weekday: "short",
+                                                })}
+                                            </p>
+                                            <p className="text-xs text-blue-400 mb-1">
+                                                {parseLocalDate(date).toLocaleDateString("en-US", {
+                                                    month: "short",
+                                                    day: "numeric",
                                                 })}
                                             </p>
                                             <p className="text-xs text-blue-400 mb-1">
