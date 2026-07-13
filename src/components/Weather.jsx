@@ -61,11 +61,7 @@ function Weather() {
             const geoResponse = await fetch(
                 `https://geocoding-api.open-meteo.com/v1/search?name=${searchInput}&count=1&language=en&format=json`
             );
-            console.log("Response without json:", geoResponse);
-
             const geoData = await geoResponse.json();
-
-            console.log("Response with json:", geoData);
 
             if (geoData.results && geoData.results.length > 0) {
                 const result = geoData.results[0];
@@ -88,7 +84,7 @@ function Weather() {
 
     //function to get weather icon based on weather code
     const getWeatherIcon = (weatherCode) => {
-        if (!weatherCode) return <Cloud className="w-12 h-12" />;
+        if (weatherCode === undefined || weatherCode === null) return <Cloud className="w-12 h-12" />;
 
         if (weatherCode === 0 || weatherCode === 1) {
             return <Sun className="w-12 h-12 text-yellow-400" />;
@@ -161,7 +157,7 @@ function Weather() {
             } catch (error) {
                 console.error(error);
             }
-        }, 30); // Debounce API call by 30ms
+        }, 300); // Debounce API call by 300ms
 
         return () => clearTimeout(timer);
     }, [searchInput]);
