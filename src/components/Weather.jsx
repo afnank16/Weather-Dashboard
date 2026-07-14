@@ -21,9 +21,9 @@ function Weather() {
     const searchRef = useRef(null);//search ref to detect click outside of the search bar
 
     const parseLocalDate = (dateStr) => {//function to parse date string in YYYY-MM-DD format to a Date object in local time
-    const [year, month, day] = dateStr.split("-").map(Number);
-    return new Date(year, month - 1, day); // constructs in local time, no UTC shift
-};
+        const [year, month, day] = dateStr.split("-").map(Number);
+        return new Date(year, month - 1, day); // constructs in local time, no UTC shift
+    };
 
     //function to fetch weather data by coordinates
     const fetchWeatherByCoords = async (lat, lon) => {
@@ -64,8 +64,15 @@ function Weather() {
             setError("");
 
             const geoResponse = await fetch(
-                `https://geocoding-api.open-meteo.com/v1/search?name=${searchInput}&count=1&language=en&format=json`
+                `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchInput)}&count=1&language=en&format=json`
             );
+            
+            if (!weatherResponse.ok) throw new Error(`Weather API responded with ${weatherResponse.status}`);
+            // and
+            if (!geoResponse.ok) throw new Error(`Geocoding API responded with ${geoResponse.status}`);
+            // and (in the suggestions effect, no throw needed, just skip)
+            if (!response.ok) return;
+            
             const geoData = await geoResponse.json();
 
             if (geoData.results && geoData.results.length > 0) {
@@ -95,13 +102,7 @@ function Weather() {
             return <Sun className="w-12 h-12 text-yellow-400" />;
         } else if (weatherCode === 80 || weatherCode === 81 || weatherCode === 82) {
             return <CloudRain className="w-12 h-12 text-blue-400" />;
-        } else if (
-            weatherCode >= 70 &&
-            weatherCode <= 78 &&
-            weatherCode !== 80 &&
-            weatherCode !== 81 &&
-            weatherCode !== 82
-        ) {
+        } else if (weatherCode >= 51 && weatherCode <= 67) {
             return <CloudRain className="w-12 h-12 text-blue-400" />;
         }
         return <Cloud className="w-12 h-12 text-gray-400" />;
@@ -109,7 +110,7 @@ function Weather() {
 
     //function to get weather description based on weather code
     const getWeatherDescription = (weatherCode) => {
-        if (!weatherCode) return "Unknown";
+        if (weatherCode === undefined || weatherCode === null) return "Unknown";
 
         const descriptions = {
             0: "Clear Sky",
@@ -121,9 +122,13 @@ function Weather() {
             51: "Light Drizzle",
             53: "Drizzle",
             55: "Heavy Drizzle",
+            56: "Freezing Drizzle",
+            57: "Heavy Freezing Drizzle",
             61: "Slight Rain",
             63: "Rain",
             65: "Heavy Rain",
+            66: "Freezing Rain",
+            67: "Heavy Freezing Rain",
             71: "Slight Snow",
             73: "Snow",
             75: "Heavy Snow",
@@ -154,7 +159,7 @@ function Weather() {
         const timer = setTimeout(async () => {
             try {
                 const response = await fetch(
-                    `https://geocoding-api.open-meteo.com/v1/search?name=${searchInput}&count=5&language=en&format=json`
+                    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchInput)}&count=5&language=en&format=json`
                 );
 
                 const data = await response.json();
@@ -342,15 +347,10 @@ function Weather() {
                                             className="bg-white bg-opacity-10 rounded-xl p-2 text-center backdrop-blur-sm hover:bg-opacity-20 transition"
                                         >
                                             <p className="text-gray-600 font-semibold mb-1">
-                                                {new Date(date).toLocaleDateString("en-US", {
-                                                    weekday: "short",
-                                                })}
+                                                {parseLocalDate(date).toLocaleDateString("en-US", { weekday: "short" })}
                                             </p>
                                             <p className="text-xs text-blue-400 mb-1">
-                                                {new Date(date).toLocaleDateString("en-US", {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                })}
+                                                {parseLocalDate(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                                             </p>
                                             <div className="flex justify-center mb-2">
                                                 {getWeatherIcon(forecast.weatherCodes[index])}
